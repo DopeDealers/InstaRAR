@@ -1,3 +1,10 @@
+<div align="center">
+
+![Cyci Logo](F:/Cyci%20new/TEXTONLY_Showcase_LogoRainbow.svg)
+
+**Proudly forked by Cyci**
+
+</div>
 > [!TIP]
 > RARLAB® released WinRAR 7.13! Use [`ir_hardened.ps1`](#Usage) to stay up to date. 🚀
 >
