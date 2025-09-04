@@ -34,6 +34,7 @@ function Write-Info{ Param([Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()
 function Write-Warn{ Param([Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string]$Message) ; Write-Host "WARN: $Message" -ForegroundColor Yellow }
 function Write-Err{ Param([Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string]$Message) ; Write-Host "ERROR: $Message" -ForegroundColor Red }
 
+# Thanks to neuralpain for excruciatingly making this 
 function Format-Text {
   [CmdletBinding()]
   Param(
