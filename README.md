@@ -69,15 +69,33 @@
 
 ## Usage
 
-### Direct execution (recommended)
+### Install or update WinRAR (hardened installer)
+
+Direct execution (recommended):
 ```powershell
 irm "https://cdn.cyci.org/ir_hardened.ps1" | iex
 ```
 
-### Local execution
+Local execution:
 ```powershell
 .\ir_hardened.ps1
 ```
+
+Or double‑click wrapper: ir_hardened.cmd
+
+### License your installed WinRAR (hardened licenser)
+
+Direct execution (recommended):
+```powershell
+irm "https://cdn.cyci.org/ir_license.ps1" | iex
+```
+
+Local execution:
+```powershell
+.\ir_license.ps1
+```
+
+Or double‑click wrapper: ir_license.cmd
 
 ## Evolution from oneclickrar/installrar
 
@@ -103,7 +121,10 @@ InstaRAR's `ir_hardened.ps1` is the spiritual successor to the popular `oneclick
 
 ## Files
 
-- `ir_hardened.ps1` - The main hardened installer script (evolved from installrar.ps1/cmd)
+- `ir_hardened.ps1` - Hardened installer (successor to installrar)
+- `ir_hardened.cmd` - CMD wrapper that launches the hardened installer
+- `ir_license.ps1` - Hardened licenser (successor to licenserar)
+- `ir_license.cmd` - CMD wrapper that launches the hardened licenser
 
 ## Credits
 
