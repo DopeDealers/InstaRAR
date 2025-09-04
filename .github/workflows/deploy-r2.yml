@@ -17,38 +17,17 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       
-    - name: Upload ir_hardened.ps1 to R2
-      uses: cloudflare/wrangler-action@v3
+    - name: Upload PowerShell scripts to R2
+      uses: ryand56/r2-upload-action@latest
       with:
-        apiToken: ${{ vars.CLOUDFLARE_API_TOKEN }}
-        accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-        wranglerVersion: "3.90.0"
-        command: r2 object put ${{ vars.R2_BUCKET_NAME }}/ir_hardened.ps1 --file=./ir_hardened.ps1 --content-type="text/plain"
-      env:
-        CLOUDFLARE_R2_ACCESS_KEY_ID: ${{ vars.R2_ACCESS_KEY_ID }}
-        CLOUDFLARE_R2_SECRET_ACCESS_KEY: ${{ vars.R2_SECRET_ACCESS_KEY }}
-        
-    - name: Upload ir_license.ps1 to R2
-      uses: cloudflare/wrangler-action@v3
-      with:
-        apiToken: ${{ vars.CLOUDFLARE_API_TOKEN }}
-        accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-        wranglerVersion: "3.90.0"
-        command: r2 object put ${{ vars.R2_BUCKET_NAME }}/ir_license.ps1 --file=./ir_license.ps1 --content-type="text/plain"
-      env:
-        CLOUDFLARE_R2_ACCESS_KEY_ID: ${{ vars.R2_ACCESS_KEY_ID }}
-        CLOUDFLARE_R2_SECRET_ACCESS_KEY: ${{ vars.R2_SECRET_ACCESS_KEY }}
-        
-    - name: Upload ir_unlicense.ps1 to R2
-      uses: cloudflare/wrangler-action@v3
-      with:
-        apiToken: ${{ vars.CLOUDFLARE_API_TOKEN }}
-        accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-        wranglerVersion: "3.90.0"
-        command: r2 object put ${{ vars.R2_BUCKET_NAME }}/ir_unlicense.ps1 --file=./ir_unlicense.ps1 --content-type="text/plain"
-      env:
-        CLOUDFLARE_R2_ACCESS_KEY_ID: ${{ vars.R2_ACCESS_KEY_ID }}
-        CLOUDFLARE_R2_SECRET_ACCESS_KEY: ${{ vars.R2_SECRET_ACCESS_KEY }}
+        r2-account-id: ${{ vars.R2_ACCOUNT_ID }}
+        r2-access-key-id: ${{ vars.R2_ACCESS_KEY_ID }}
+        r2-secret-access-key: ${{ vars.R2_SECRET_ACCESS_KEY }}
+        r2-bucket: ${{ vars.R2_BUCKET_NAME }}
+        source-dir: './'
+        destination-dir: './'
+        include: 'ir_*.ps1'
+        output-file-url: true
 
     - name: Deployment Summary
       run: |
