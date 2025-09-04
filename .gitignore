@@ -15,3 +15,5 @@ tests/
 
 # mac stuff
 .DS_Store
+WARP.md
+temp_ir_hardened.ps1

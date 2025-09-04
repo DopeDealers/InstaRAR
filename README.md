@@ -69,11 +69,13 @@
 
 **WinRAR Installation & Updates:**
 - Automatically detects the latest WinRAR version
-- Downloads from official sources with multiple fallbacks
-- Verifies Authenticode signatures (because we're not animals)
-- Handles existing installations gracefully
-- Closes running WinRAR instances before installing
-- Installs silently without user intervention
+- Downloads from official sources with multiple fallbacks and smart retry logic
+- Enhanced Authenticode signature verification with publisher validation
+- SHA256 hash verification with cross-source validation
+- Certificate pinning with dynamic retrieval and caching
+- Handles existing installations gracefully with version comparison
+- Closes running WinRAR instances before installing (with graceful and force termination)
+- True silent installation without UI prompts (requires admin privileges)
 
 **WinRAR Licensing Management:**
 - Securely installs WinRAR licenses with automatic backups
@@ -102,7 +104,15 @@ Local execution:
 .\ir_hardened.ps1
 ```
 
+For truly silent installation (no UAC prompts), run as administrator:
+```powershell
+# Right-click PowerShell and "Run as Administrator", then:
+.\ir_hardened.ps1
+```
+
 Or double‑click wrapper: ir_hardened.cmd
+
+> **Note**: The script will work without admin privileges but Windows UAC will prompt for permission during installation. This is the normal behavior of UAC.
 
 ### License your installed WinRAR (hardened licenser)
 
@@ -173,11 +183,16 @@ ir_unlicense.cmd -force -nobackup
 ## Key Features
 
 ### 🛡️ **Security Hardening**
-- **Smart elevation**: Only requests admin when actually needed, not every time
+- **Enhanced certificate pinning**: Dynamic SSL certificate retrieval with caching and fallback validation
+- **Smart hash verification**: Cross-validates downloads from multiple official sources
+- **URL validation**: Whitelist-based URL filtering with path traversal protection
+- **Publisher verification**: Enhanced Authenticode signature validation with trusted publisher checks
+- **Smart elevation**: Only requests admin when actually needed, with clear user feedback
 - **Automatic backups**: License files backed up with timestamps before any changes
 - **Fallback protection**: If primary backup fails, falls back to user TEMP directory
 - **File verification**: Validates license files are genuine before operations
 - **Path safety**: Proper escaping and handling of special characters in paths
+- **Security event logging**: Comprehensive logging to Windows Event Log for audit trails
 
 ### ⚡ **User Control**
 - **Force mode**: Skip confirmation prompts for automated scenarios
@@ -186,9 +201,12 @@ ir_unlicense.cmd -force -nobackup
 - **Debug support**: Pause at key points for troubleshooting
 
 ### 🔧 **Reliability**
-- **Comprehensive error handling**: Graceful failures with detailed feedback
-- **Operation verification**: Confirms operations actually succeeded
-- **Process management**: Handles running WinRAR instances properly
+- **Comprehensive error handling**: Graceful failures with detailed feedback and recovery options
+- **Smart download logic**: Prevents multiple simultaneous download attempts with early exit on success
+- **Installation verification**: Multi-level verification including file existence and version checking
+- **Process management**: Enhanced WinRAR process detection and graceful/force termination
+- **Operation verification**: Confirms operations actually succeeded with multiple validation methods
+- **Retry mechanisms**: Exponential backoff and intelligent retry logic for network operations
 - **Multi-architecture support**: Handles 32-bit, 64-bit, and mixed installations
 
 ### 🎯 **Ease of Use**
@@ -207,18 +225,25 @@ InstaRAR's `ir_hardened.ps1` is the spiritual successor to the popular `oneclick
 - Silent installation
 
 **What we improved:**
-- **Security hardening**: Proper auth handling
-- **Process management**: Graceful WinRAR closure before installation  
-- **Better error handling**: Comprehensive error checking and user feedback
-- **Edge case handling**: Fixed various bugs and race conditions
-- **PowerShell native**: No more batch file limitations
+- **Enhanced security hardening**: Multi-layer security with certificate pinning, hash verification, and comprehensive audit logging
+- **Smart installation logic**: Prevents multiple simultaneous installations and handles edge cases gracefully
+- **Advanced process management**: Enhanced WinRAR detection with graceful and force termination options
+- **Comprehensive error handling**: Detailed error checking, recovery options, and user feedback with security event logging
+- **Enterprise-grade reliability**: Smart retry logic, installation verification, and robust edge case handling
+- **True silent operation**: Properly configured silent installation (requires admin privileges for full automation)
+- **PowerShell native**: Modern PowerShell implementation with advanced security features
 
 ## Security Features
 
 **Installation Security:**
-- **Publisher verification**: Validates that installers are actually signed by "win.rar GmbH"
-- **Safe execution**: Copies installers to controlled temp directories before running
-- **Process management**: Properly closes running WinRAR instances to prevent conflicts
+- **Enhanced publisher verification**: Multi-level Authenticode signature validation with certificate chain verification
+- **Smart hash verification**: Cross-validates installers against multiple official download sources
+- **Certificate pinning**: Dynamic SSL certificate validation with intelligent CA trust verification
+- **URL filtering**: Whitelist-based download source validation with path traversal protection
+- **Safe execution**: Copies installers to controlled temp directories with integrity checking
+- **Process management**: Enhanced process detection with graceful and force termination options
+- **Installation verification**: Multi-point validation to ensure successful installation
+- **Security event logging**: Comprehensive audit trail in Windows Event Log
 
 **Licensing Security:**
 - **Intelligent elevation**: Only requests admin privileges when actually needed

@@ -1,0 +1,56 @@
+name: Deploy PowerShell Scripts to R2
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'ir_*.ps1'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup R2 credentials
+      run: |
+        mkdir -p ~/.aws
+        cat > ~/.aws/credentials << EOF
+        [default]
+        aws_access_key_id = ${{ secrets.R2_ACCESS_KEY_ID }}
+        aws_secret_access_key = ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        EOF
+        
+    - name: Upload ir_hardened.ps1 to R2
+      uses: cloudflare/wrangler-action@v3
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        command: r2 object put ${{ secrets.R2_BUCKET_NAME }}/ir_hardened.ps1 --file=./ir_hardened.ps1 --content-type="text/plain"
+        
+    - name: Upload ir_license.ps1 to R2
+      uses: cloudflare/wrangler-action@v3
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        command: r2 object put ${{ secrets.R2_BUCKET_NAME }}/ir_license.ps1 --file=./ir_license.ps1 --content-type="text/plain"
+        
+    - name: Upload ir_unlicense.ps1 to R2
+      uses: cloudflare/wrangler-action@v3
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        command: r2 object put ${{ secrets.R2_BUCKET_NAME }}/ir_unlicense.ps1 --file=./ir_unlicense.ps1 --content-type="text/plain"
+
+    - name: Deployment Summary
+      run: |
+        echo "✅ Successfully deployed PowerShell scripts to R2:"
+        echo "   • ir_hardened.ps1 - Enhanced WinRAR installer"
+        echo "   • ir_license.ps1 - WinRAR licenser"
+        echo "   • ir_unlicense.ps1 - WinRAR unlicenser"
+        echo ""
+        echo "📍 Available at: https://cdn.cyci.org/[filename]"
