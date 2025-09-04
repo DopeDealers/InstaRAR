@@ -11,40 +11,44 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: production # Use your environment name
     
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       
-    - name: Setup R2 credentials
-      run: |
-        mkdir -p ~/.aws
-        cat > ~/.aws/credentials << EOF
-        [default]
-        aws_access_key_id = ${{ secrets.R2_ACCESS_KEY_ID }}
-        aws_secret_access_key = ${{ secrets.R2_SECRET_ACCESS_KEY }}
-        EOF
-        
     - name: Upload ir_hardened.ps1 to R2
       uses: cloudflare/wrangler-action@v3
       with:
-        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        command: r2 object put ${{ secrets.R2_BUCKET_NAME }}/ir_hardened.ps1 --file=./ir_hardened.ps1 --content-type="text/plain"
+        apiToken: ${{ vars.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        wranglerVersion: "3.90.0"
+        command: r2 object put ${{ vars.R2_BUCKET_NAME }}/ir_hardened.ps1 --file=./ir_hardened.ps1 --content-type="text/plain"
+      env:
+        CLOUDFLARE_R2_ACCESS_KEY_ID: ${{ vars.R2_ACCESS_KEY_ID }}
+        CLOUDFLARE_R2_SECRET_ACCESS_KEY: ${{ vars.R2_SECRET_ACCESS_KEY }}
         
     - name: Upload ir_license.ps1 to R2
       uses: cloudflare/wrangler-action@v3
       with:
-        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        command: r2 object put ${{ secrets.R2_BUCKET_NAME }}/ir_license.ps1 --file=./ir_license.ps1 --content-type="text/plain"
+        apiToken: ${{ vars.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        wranglerVersion: "3.90.0"
+        command: r2 object put ${{ vars.R2_BUCKET_NAME }}/ir_license.ps1 --file=./ir_license.ps1 --content-type="text/plain"
+      env:
+        CLOUDFLARE_R2_ACCESS_KEY_ID: ${{ vars.R2_ACCESS_KEY_ID }}
+        CLOUDFLARE_R2_SECRET_ACCESS_KEY: ${{ vars.R2_SECRET_ACCESS_KEY }}
         
     - name: Upload ir_unlicense.ps1 to R2
       uses: cloudflare/wrangler-action@v3
       with:
-        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        command: r2 object put ${{ secrets.R2_BUCKET_NAME }}/ir_unlicense.ps1 --file=./ir_unlicense.ps1 --content-type="text/plain"
+        apiToken: ${{ vars.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        wranglerVersion: "3.90.0"
+        command: r2 object put ${{ vars.R2_BUCKET_NAME }}/ir_unlicense.ps1 --file=./ir_unlicense.ps1 --content-type="text/plain"
+      env:
+        CLOUDFLARE_R2_ACCESS_KEY_ID: ${{ vars.R2_ACCESS_KEY_ID }}
+        CLOUDFLARE_R2_SECRET_ACCESS_KEY: ${{ vars.R2_SECRET_ACCESS_KEY }}
 
     - name: Deployment Summary
       run: |
