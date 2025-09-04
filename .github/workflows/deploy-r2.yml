@@ -17,6 +17,17 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       
+    - name: Upload instarar.ps1 to R2
+      uses: ryand56/r2-upload-action@latest
+      with:
+        r2-account-id: ${{ secrets.R2_ACCOUNT_ID }}
+        r2-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
+        r2-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        r2-bucket: ${{ secrets.R2_BUCKET_NAME }}
+        source-dir: 'instarar.ps1'
+        destination-dir: './'
+        output-file-url: true
+
     - name: Upload ir_hardened.ps1 to R2
       uses: ryand56/r2-upload-action@latest
       with:
@@ -53,6 +64,7 @@ jobs:
     - name: Deployment Summary
       run: |
         echo "✅ Successfully deployed PowerShell scripts to R2:"
+        echo "   • instarar.ps1 - Interactive Powershell to use all 3 scripts"
         echo "   • ir_hardened.ps1 - Enhanced WinRAR installer"
         echo "   • ir_license.ps1 - WinRAR licenser"
         echo "   • ir_unlicense.ps1 - WinRAR unlicenser"

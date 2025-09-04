@@ -103,6 +103,11 @@ function Write-SecurityEvent {
         [Parameter(Mandatory=$false)][int]$EventId = 1001
     )
     
+    # Validate parameters
+    if ([string]::IsNullOrEmpty($Message)) {
+        return
+    }
+    
     # Always write to console
     switch ($Level) {
         "Information" { Write-Info $Message }
@@ -112,6 +117,10 @@ function Write-SecurityEvent {
     
     # Try to write to Windows Event Log
     try {
+        if ([string]::IsNullOrEmpty($script:EVENT_SOURCE) -or [string]::IsNullOrEmpty($script:LOG_NAME)) {
+            return
+        }
+        
         $entryType = switch ($Level) {
             "Information" { [System.Diagnostics.EventLogEntryType]::Information }
             "Warning"     { [System.Diagnostics.EventLogEntryType]::Warning }
@@ -146,7 +155,15 @@ function Test-ValidDownloadUrl {
     param([Parameter(Mandatory=$true)][string]$Url)
     
     try {
+        if ([string]::IsNullOrEmpty($Url)) {
+            return $false
+        }
+        
         $uri = [System.Uri]$Url
+        
+        if ($null -eq $uri) {
+            return $false
+        }
         
         # Must be HTTPS
         if ($uri.Scheme -ne "https") {
@@ -155,15 +172,22 @@ function Test-ValidDownloadUrl {
         }
         
         # Host must be in allowed list
-        if (-not $script:ALLOWED_HOSTS.ContainsKey($uri.Host)) {
+        if ($null -eq $script:ALLOWED_HOSTS -or -not $script:ALLOWED_HOSTS.ContainsKey($uri.Host)) {
             Write-SecurityEvent "Host not in allowlist: $($uri.Host) for $Url" "Warning" 2002
             return $false
         }
         
         # Path must match allowed patterns
         $hostConfig = $script:ALLOWED_HOSTS[$uri.Host]
+        if ($null -eq $hostConfig -or $null -eq $hostConfig.AllowedPaths) {
+            return $false
+        }
+        
         $pathAllowed = $false
         foreach ($allowedPath in $hostConfig.AllowedPaths) {
+            if ([string]::IsNullOrEmpty($allowedPath)) {
+                continue
+            }
             $pattern = $allowedPath -replace '\*', '.*'
             if ($uri.AbsolutePath -match $pattern) {
                 $pathAllowed = $true

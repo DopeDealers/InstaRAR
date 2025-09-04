@@ -92,6 +92,29 @@
 
 ## Usage
 
+### 🚀 Interactive Launcher (Recommended for new users)
+
+The easiest way to use InstaRAR - an interactive menu that lets you choose what to do:
+
+Direct execution (recommended):
+```powershell
+irm "https://cdn.cyci.org/instarar.ps1" | iex
+```
+
+Local execution:
+```powershell
+.\instarar.ps1
+```
+
+Or double‑click wrapper: instarar.cmd
+
+**Features:**
+- 🎨 Beautiful interactive menu
+- ✅ Choose from install, license, or unlicense operations
+- 🔄 Always uses the latest scripts from CDN
+- 🛡️ Built-in error handling and user feedback
+- 📱 Simple 1-2-3 selection interface
+
 ### Install or update WinRAR (hardened installer)
 
 Direct execution (recommended):
@@ -210,7 +233,9 @@ ir_unlicense.cmd -force -nobackup
 - **Multi-architecture support**: Handles 32-bit, 64-bit, and mixed installations
 
 ### 🎯 **Ease of Use**
+- **Interactive menu**: Beautiful 1-2-3 selection interface for easy operation (`instarar.ps1`)
 - **One-click operation**: Works out of the box with sensible defaults
+- **Always up-to-date**: Interactive launcher pulls latest scripts from CDN automatically
 - **Clear feedback**: Always know what's happening with detailed progress info
 - **Toast notifications**: Visual feedback with error handling
 - **Both PowerShell & CMD**: Use whatever you prefer, (NOTE) ps1's are available through our CDN, CMD scripts must be downloaded and ran locally
@@ -259,6 +284,11 @@ InstaRAR's `ir_hardened.ps1` is the spiritual successor to the popular `oneclick
 
 ## Files
 
+### 🎨 Interactive Interface
+- `instarar.ps1` - Interactive launcher with menu selection (recommended for new users)
+- `instarar.cmd` - CMD wrapper that launches the interactive menu
+
+### 🔧 Individual Tools  
 - `ir_hardened.ps1` - Hardened installer (successor to installrar/oneclickrar)
 - `ir_hardened.cmd` - CMD wrapper that launches the hardened installer
 - `ir_license.ps1` - Hardened licenser (successor to licenserar)
