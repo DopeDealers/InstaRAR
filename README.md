@@ -5,6 +5,7 @@
 **Proudly forked by Cyci**
 
 </div>
+
 > [!TIP]
 > RARLAB® released WinRAR 7.13! Use [`ir_hardened.ps1`](#Usage) to stay up to date. 🚀
 >
