@@ -17,16 +17,37 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       
-    - name: Upload PowerShell scripts to R2
+    - name: Upload ir_hardened.ps1 to R2
       uses: ryand56/r2-upload-action@latest
       with:
-        r2-account-id: ${{ vars.R2_ACCOUNT_ID }}
-        r2-access-key-id: ${{ vars.R2_ACCESS_KEY_ID }}
-        r2-secret-access-key: ${{ vars.R2_SECRET_ACCESS_KEY }}
-        r2-bucket: ${{ vars.R2_BUCKET_NAME }}
-        source-dir: './'
-        destination-dir: './'
-        include: 'ir_*.ps1'
+        r2-account-id: ${{ secrets.R2_ACCOUNT_ID }}
+        r2-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
+        r2-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        r2-bucket: ${{ secrets.R2_BUCKET_NAME }}
+        source-dir: './ir_hardened.ps1'
+        destination-dir: './ir_hardened.ps1'
+        output-file-url: true
+        
+    - name: Upload ir_license.ps1 to R2
+      uses: ryand56/r2-upload-action@latest
+      with:
+        r2-account-id: ${{ secrets.R2_ACCOUNT_ID }}
+        r2-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
+        r2-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        r2-bucket: ${{ secrets.R2_BUCKET_NAME }}
+        source-dir: './ir_license.ps1'
+        destination-dir: './ir_license.ps1'
+        output-file-url: true
+        
+    - name: Upload ir_unlicense.ps1 to R2
+      uses: ryand56/r2-upload-action@latest
+      with:
+        r2-account-id: ${{ secrets.R2_ACCOUNT_ID }}
+        r2-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
+        r2-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        r2-bucket: ${{ secrets.R2_BUCKET_NAME }}
+        source-dir: './ir_unlicense.ps1'
+        destination-dir: './ir_unlicense.ps1'
         output-file-url: true
 
     - name: Deployment Summary
