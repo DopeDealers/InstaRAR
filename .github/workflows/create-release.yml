@@ -1,0 +1,109 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up release environment
+      run: |
+        # Install required tools
+        sudo apt-get update
+        sudo apt-get install -y zip
+        
+    - name: Get version from VERSION file
+      id: version
+      run: |
+        VERSION=$(cat VERSION | tr -d '\r\n')
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Version: $VERSION"
+        
+    - name: Make release.sh executable
+      run: chmod +x release.sh
+      
+    - name: Run release script
+      run: ./release.sh
+      
+    - name: List release contents
+      run: |
+        echo "Release files created:"
+        ls -la release/
+        
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      id: create_release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ steps.version.outputs.version }}
+        release_name: InstaRAR v${{ steps.version.outputs.version }}
+        body: |
+          ## InstaRAR v${{ steps.version.outputs.version }}
+          
+          ### 📦 Complete InstaRAR Toolkit
+          
+          **What's Included:**
+          - 🎨 **instarar.ps1** - Interactive launcher with beautiful menu
+          - 🛠️ **ir_hardened.ps1** - Enhanced hardened WinRAR installer
+          - 🔑 **ir_license.ps1** - WinRAR license manager
+          - 🗑️ **ir_unlicense.ps1** - License removal tool
+          - 💻 **CMD wrappers** - Double-click files for easy local use
+          - 📖 **Documentation** - Complete README and LICENSE
+          
+          ### 🚀 Quick Start
+          **Interactive Menu (Recommended):**
+          ```powershell
+          irm "https://cdn.cyci.org/instarar.ps1" | iex
+          ```
+          
+          **Individual Scripts:**
+          ```powershell
+          # Install WinRAR
+          irm "https://cdn.cyci.org/ir_hardened.ps1" | iex
+          
+          # License WinRAR  
+          irm "https://cdn.cyci.org/ir_license.ps1" | iex
+          
+          # Remove License
+          irm "https://cdn.cyci.org/ir_unlicense.ps1" | iex
+          ```
+          
+          **Local Use:**
+          Download the ZIP, extract, and double-click any `.cmd` file
+          
+          ### ✨ Features
+          - Enterprise-grade security with certificate pinning
+          - Smart hash verification across multiple official sources
+          - Comprehensive audit logging to Windows Event Log
+          - True silent installation with proper UAC handling
+          - Beautiful interactive menu interface
+          - Always up-to-date via CDN distribution
+          
+        draft: false
+        prerelease: false
+        
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./release/instarar-${{ steps.version.outputs.version }}.zip
+        asset_name: instarar-${{ steps.version.outputs.version }}.zip
+        asset_content_type: application/zip
+        
+    - name: Summary
+      run: |
+        echo "🎉 Release created successfully!"
+        echo "📦 Version: v${{ steps.version.outputs.version }}"
+        echo "📁 Archive: instarar-${{ steps.version.outputs.version }}.zip"
+        echo "🔗 Check the Releases page for download link"

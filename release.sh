@@ -14,6 +14,8 @@ name="instarar"
 
 # [ FILES LIST ]
 files_list=(
+  "instarar.ps1"
+  "instarar.cmd"
   "ir_hardened.cmd"
   "ir_license.cmd"
   "ir_unlicense.cmd"
