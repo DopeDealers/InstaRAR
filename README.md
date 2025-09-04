@@ -55,7 +55,7 @@
 
 # InstaRAR
 
-**One-click hardened WinRAR installer that actually gives a damn about security.**
+**One-click hardened WinRAR installer**
 
 ## What it does
 
