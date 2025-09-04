@@ -50,7 +50,7 @@
 >      as a part of 64-bit installation package.
 > ```
 >
-> If you do need to install 32-bit versions of WinRAR, you can [configure installrar.cmd](#configuration) as `installrar_x32_701.cmd` to install the most recent 32-bit version of WinRAR.
+> If you do need to install 32-bit versions of WinRAR, you can [configure ir_hardened.ps1](#Usage) as `ir_hardened_x32_701.ps1` to install the most recent 32-bit version of WinRAR.
 > </details>
 
 # InstaRAR
