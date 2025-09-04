@@ -1,53 +1,71 @@
 #!/bin/bash
 
-# release.sh, Version 0.1.0
-# Copyright (c) 2025, neuralpain
-# https://github.com/neuralpain/oneclickwinrar
-# A bundler for oneclickwinrar
+# release.sh, Version 0.2.0
+# Copyright (c) 2025, Cyci
+# https://github.com/Cyci/InstaRAR
+# Bundler for InstaRAR (fork of oneclickwinrar)
+
+set -euo pipefail
+IFS=$'\n\t'
 
 # [ INFO ]
-# edit the version in ./VERSION
 version=$(<VERSION)
-# change name of release
-name="oneclickwinrar"
+name="instarar"
 
 # [ FILES LIST ]
 files_list=(
-  "licenserar.cmd"
-  "oneclickrar.cmd"
-  "installrar.cmd"
-  "unlicenserar.cmd"
+  "ir_hardened.cmd"
+  "ir_license.cmd"
+  "ir_unlicense.cmd"
+  "ir_hardened.ps1"
+  "ir_license.ps1"
+  "ir_unlicense.ps1"
 )
 
-complete_release=$name-$version.zip
+complete_release="$name-$version.zip"
 
-mkdir dist
+# Create necessary directories
+mkdir -p dist release
 
-cp ./LICENSE ./VERSION ./README.txt dist
+# Clean previous dist
+rm -rf dist/*
 
+# Copy core files
+cp ./LICENSE ./VERSION ./README.md dist
+
+# Copy scripts
 for file in "${files_list[@]}"; do
-  cp $file dist
+  cp "$file" dist
 done
 
-cp -r bin dist
+# Copy bin folder if exists
+if [[ -d "bin" ]]; then
+  cp -r bin dist
+fi
 
+# Move into dist to create zip
 cd dist
 
-# Ensure that the `zip` package is installed (https://stackoverflow.com/a/55749636)
-#     1. Navigate to this sourceforge page: https://sourceforge.net/projects/gnuwin32/files/zip/3.0/
-#         1.1. Download `zip-3.0-bin.zip`
-#         1.2. In the zipped file, in the `bin` folder, find the file `zip.exe`.
-#         1.3. Extract the file `zip.exe` to your `mingw64` bin folder (`C:\Program Files\Git\mingw64\bin`)
-#     2. Navigate to to this sourceforge page: https://sourceforge.net/projects/gnuwin32/files/bzip2/1.0.5/
-#         2.1. Download `bzip2-1.0.5-bin.zip`
-#         2.2. In the zipped file, in the bin folder, find the file `bzip2.dll`
-#         2.3. Extract `bzip2.dll` to your `mingw64\bin` folder (same folder as above: `C:\Program Files\Git\mingw64\bin`)
-zip -q $complete_release -r * || (echo -e "$return error: Failed to create archive." && return)
+# Create zip archive
+if ! command -v zip &>/dev/null; then
+  echo "ERROR: zip command not found. Please install zip and retry."
+  exit 1
+fi
+
+zip -q -r "$complete_release" * || { echo "ERROR: Failed to create archive."; exit 1; }
 
 cd ..
 
-mv ./dist/$complete_release ./release/$complete_release
+# Move archive to release folder
+mv "dist/$complete_release" "release/$complete_release"
 
-[[ -f $complete_release ]] && echo -e "$return Archived success."
+# Confirm success
+if [[ -f "release/$complete_release" ]]; then
+  echo "✅ Release archive created successfully: release/$complete_release"
+else
+  echo "❌ Release failed!"
+  exit 1
+fi
 
+# Clean up
 rm -rf dist
