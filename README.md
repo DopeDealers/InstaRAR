@@ -1,6 +1,6 @@
 <div align="center">
 
-![Cyci Logo](F:/Cyci%20new/TEXTONLY_Showcase_LogoRainbow.svg)
+![Cyci Logo](images/fdghtdhd.png)
 
 **Proudly forked by Cyci**
 
