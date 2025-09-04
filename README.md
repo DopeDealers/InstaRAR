@@ -1,5 +1,5 @@
 > [!TIP]
-> RARLAB® released WinRAR 7.13! Use [`installrar`](#installrarcmd) to stay up to date. 🚀
+> RARLAB® released WinRAR 7.13! Use [`ir_hardened.ps1`](#installrarcmd) to stay up to date. 🚀
 >
 > <details>
 > <summary>View changes</summary>
