@@ -1262,13 +1262,17 @@ function Confirm-CurrentWinrarInstallation {
       Write-Info "WinRAR $(Format-Text $currentVersionString -Foreground White -Formatting Underline) is already installed"
       Write-SecurityEvent "Detected existing WinRAR installation: $currentVersionString" "Information" 10030
       
-      # For one-click installations, automatically proceed with reinstall for updates
-      # This ensures users always get the latest version and any security patches
-      Write-Info "Proceeding with reinstallation to ensure latest updates and security patches..."
-      Write-SecurityEvent "Auto-proceeding with reinstallation for one-click workflow" "Information" 10031
-      
-      Close-WinRAR
-      $script:FORCE_REINSTALL = $true
+      # Ask user if they want to reinstall for updates/security patches
+      Confirm-QueryResult -Query "Do you want to reinstall WinRAR to ensure latest updates and security patches?" -ExpectPositive -ResultPositive {
+        Write-Info "Proceeding with reinstallation..."
+        Write-SecurityEvent "User chose to reinstall for updates" "Information" 10031
+        Close-WinRAR
+        $script:FORCE_REINSTALL = $true
+      } -ResultNegative {
+        Write-Info "Skipping reinstallation"
+        Write-SecurityEvent "User chose to skip reinstallation" "Information" 10033
+        Stop-OcwrOperation -ExitType Complete -Message "WinRAR is already installed and up to date."
+      }
     } else {
       # Different version detected - definitely reinstall
       Write-Info "Different WinRAR version detected. Current: $civ, Target: $currentVersionString"
