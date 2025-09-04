@@ -7,8 +7,20 @@
   This thing will license your WinRAR installation properly and safely.
   No more silent failures or weird edge cases.
   
-  Phil @ DopeDealers - 2025
+  USAGE:
+    .\ir_license.ps1                    # Normal operation (with backup and elevation)
+    .\ir_license.ps1 -NoBackup          # Skip backup creation
+    .\ir_license.ps1 -NoElevation       # Don't request admin privileges
+    .\ir_license.ps1 -NoBackup -NoElevation # Both options
+  
+Phil @ DopeDealers - 2025
 #>
+
+param(
+  [switch]$ElevatedRerun,
+  [switch]$NoBackup,
+  [switch]$NoElevation
+)
 
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor [System.Net.SecurityProtocolType]::Tls12
 
@@ -185,14 +197,42 @@ function Write-Title {
 }
 Write-Title
 
+# Display active parameter information
+if ($NoBackup -or $NoElevation) {
+  Write-Host "Active Parameters:" -ForegroundColor Cyan
+  if ($NoBackup) { Write-Host "  • NoBackup: Existing licenses will be overwritten without backup" -ForegroundColor Yellow }
+  if ($NoElevation) { Write-Host "  • NoElevation: Admin privileges will not be requested" -ForegroundColor Yellow }
+  Write-Host
+}
+
 function Stop-OcwrOperation{
   Param([string]$ExitType,[string]$Message)
   switch($ExitType){
-    Terminate { Write-Host "$Message`nOperation terminated normally." ; exit }
-    Error     { Write-Host "ERROR: $Message`nOperation terminated with ERROR." -ForegroundColor Red ; exit 1 }
-    Warning   { Write-Host "WARN: $Message`nOperation terminated with WARNING." -ForegroundColor Yellow ; exit 2 }
-    Complete  { Write-Host "$Message`nOperation completed successfully." -ForegroundColor Green ; exit 0 }
-    default   { Write-Host "$Message`nOperation terminated." ; exit }
+    Terminate {
+      Write-Host "$Message`nOperation terminated normally."
+      if ($env:IR_LICENSE_DEBUG_PAUSE -eq '1') { Read-Host "Debug pause: Press Enter to exit" | Out-Null }
+      exit
+    }
+    Error {
+      Write-Host "ERROR: $Message`nOperation terminated with ERROR." -ForegroundColor Red
+      if ($env:IR_LICENSE_DEBUG_PAUSE -eq '1') { Read-Host "Debug pause: Press Enter to exit" | Out-Null }
+      exit 1
+    }
+    Warning {
+      Write-Host "WARN: $Message`nOperation terminated with WARNING." -ForegroundColor Yellow
+      if ($env:IR_LICENSE_DEBUG_PAUSE -eq '1') { Read-Host "Debug pause: Press Enter to exit" | Out-Null }
+      exit 2
+    }
+    Complete {
+      Write-Host "$Message`nOperation completed successfully." -ForegroundColor Green
+      if ($env:IR_LICENSE_DEBUG_PAUSE -eq '1') { Read-Host "Debug pause: Press Enter to exit" | Out-Null }
+      exit 0
+    }
+    default {
+      Write-Host "$Message`nOperation terminated."
+      if ($env:IR_LICENSE_DEBUG_PAUSE -eq '1') { Read-Host "Debug pause: Press Enter to exit" | Out-Null }
+      exit
+    }
   }
 }
 
@@ -259,9 +299,29 @@ function Set-FileAttributesNormal {
 function Backup-ExistingLicense {
   Param([Parameter(Mandatory=$true)][string]$Path)
   if (Test-Path -LiteralPath $Path -PathType Leaf) {
-    $backup = "$Path.bak-$(Get-Date -Format yyyyMMddHHmmss)"
-    try { Copy-Item -LiteralPath $Path -Destination $backup -Force -ErrorAction Stop; Write-Info "Backed up existing license to: $backup"; return $true }
-    catch { Write-Warn "Backup failed: $($_.Exception.Message)"; return $false }
+    $timestamp = Get-Date -Format yyyyMMddHHmmss
+    $backup = "$Path.bak-$timestamp"
+    try {
+      Copy-Item -LiteralPath $Path -Destination $backup -Force -ErrorAction Stop
+      Write-Info "Backed up existing license to: $backup"
+      return $true
+    }
+    catch {
+      Write-Warn "Backup failed: $($_.Exception.Message)"
+      # Fallback to user-writable TEMP directory
+      try {
+        $fallbackDir = Join-Path $env:TEMP "InstaRAR\backups"
+        if (-not (Test-Path -LiteralPath $fallbackDir -PathType Container)) { New-Item -ItemType Directory -Force -Path $fallbackDir | Out-Null }
+        $fileName = [IO.Path]::GetFileName($Path)
+        $fallbackBackup = Join-Path $fallbackDir ("${fileName}.bak-$timestamp")
+        Copy-Item -LiteralPath $Path -Destination $fallbackBackup -Force -ErrorAction Stop
+        Write-Info "Backed up existing license to: $fallbackBackup (fallback)"
+        return $true
+      } catch {
+        Write-Warn "Fallback backup failed: $($_.Exception.Message)"
+        return $false
+      }
+    }
   }
   return $false
 }
@@ -289,16 +349,26 @@ function Write-LicenseDirect {
 }
 
 function Invoke-WriteLicenseElevated {
-  Param([Parameter(Mandatory=$true)][string]$Path,[Parameter(Mandatory=$true)][string]$Content)
+  Param(
+    [Parameter(Mandatory=$true)][string]$Path,
+    [Parameter(Mandatory=$true)][string]$Content,
+    [Parameter(Mandatory=$false)][bool]$BackupWanted = $true
+  )
   $temp = $null
   try {
     $dir = Split-Path -Parent $Path
     $encoded = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($Content))
     $escapedPath = $Path.Replace("'","''")
     $escapedDir  = $dir.Replace("'","''")
+    $backupFlag  = if ($BackupWanted) { 'True' } else { 'False' }
+    $timestamp   = Get-Date -Format yyyyMMddHHmmss
     $temp = Join-Path $env:TEMP ("ir_license_write_{0}.ps1" -f ([Guid]::NewGuid().ToString("N")))
     $scriptText = @"
 if (-not (Test-Path -LiteralPath '$escapedDir' -PathType Container)) { New-Item -ItemType Directory -Force -Path '$escapedDir' | Out-Null }
+try { (Get-Item -LiteralPath '$escapedPath' -ErrorAction SilentlyContinue).Attributes = [IO.FileAttributes]::Normal } catch {}
+if ((Test-Path -LiteralPath '$escapedPath' -PathType Leaf) -and [bool]::Parse('$backupFlag')) {
+  try { Copy-Item -LiteralPath '$escapedPath' -Destination ('$escapedPath' + '.bak-$timestamp') -Force -ErrorAction Stop } catch {}
+}
 `$content = [Text.Encoding]::ASCII.GetString([Convert]::FromBase64String('$encoded'))
 [IO.File]::WriteAllText('$escapedPath', `$content, [Text.Encoding]::ASCII)
 "@
@@ -332,7 +402,47 @@ function Ensure-LicenseWrite {
   Param([Parameter(Mandatory=$true)][string]$Path,[Parameter(Mandatory=$true)][string]$Content)
   if (Write-LicenseDirect $Path $Content) { return $true }
   Write-Info "Direct write failed. Attempting elevated license write..."
-  return (Invoke-WriteLicenseElevated $Path $Content)
+  return (Invoke-WriteLicenseElevated $Path $Content $script:BACKUP_LICENSE)
+}
+
+function Requires-ElevationForPath {
+  Param([Parameter(Mandatory=$true)][string]$Path)
+  try {
+    if (-not $Path) { return $false }
+    $pf   = $env:ProgramFiles
+    $pf86 = ${env:ProgramFiles(x86)}
+    return ($Path.StartsWith($pf, [StringComparison]::OrdinalIgnoreCase) -or `
+            ($pf86 -and $Path.StartsWith($pf86, [StringComparison]::OrdinalIgnoreCase)))
+  } catch { return $false }
+}
+
+function Request-UpfrontElevation {
+  Param(
+    [Parameter(Mandatory=$false)][string]$Reason,
+    [Parameter(Mandatory=$false)][string]$CdnUrl = 'https://cdn.cyci.org/ir_license.ps1'
+  )
+  if (Test-IsAdministrator) { return }
+  if ($Reason) { Pause-IfDebug $Reason }
+  try {
+    if ($PSCommandPath -and (Test-Path -LiteralPath $PSCommandPath)) {
+      Start-Process -FilePath PowerShell.exe -Verb RunAs -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`" -ElevatedRerun" -Wait -ErrorAction Stop
+    } else {
+      $debugPrefix = if ($env:IR_LICENSE_DEBUG_PAUSE -eq '1') { "$env:IR_LICENSE_DEBUG_PAUSE='1'; " } else { "" }
+      Start-Process -FilePath PowerShell.exe -Verb RunAs -ArgumentList ("-NoProfile -ExecutionPolicy Bypass -Command { ${debugPrefix}irm '" + $CdnUrl + "' | iex }") -Wait -ErrorAction Stop
+    }
+  } catch {
+    Write-Err "Failed to relaunch with elevation: $($_.Exception.Message)"
+    Stop-OcwrOperation -ExitType Error -Message "User declined elevation or elevation failed."
+  }
+  Stop-OcwrOperation -ExitType Terminate -Message "Elevation requested. Relaunching..."
+}
+#endregion
+function Pause-IfDebug {
+  Param([string]$Reason)
+  if ($env:IR_LICENSE_DEBUG_PAUSE -eq '1') {
+    if ($Reason) { Write-Host $Reason -ForegroundColor DarkGray }
+    Read-Host "Debug pause: Press Enter to continue" | Out-Null
+  }
 }
 #endregion
 
@@ -351,7 +461,7 @@ $script:licensee          = $null
 $script:license_type      = $null
 $script:CUSTOM_LICENSE    = $false
 $script:OVERWRITE_LICENSE = $false
-$script:BACKUP_LICENSE    = $true
+$script:BACKUP_LICENSE    = -not $NoBackup
 #endregion
 
 #region Location and Defaults
@@ -408,8 +518,16 @@ function Invoke-OcwrLicensing {
     }
 
     if ((Test-Path $script:rarreg -PathType Leaf) -and $script:OVERWRITE_LICENSE -and $script:BACKUP_LICENSE) {
-      Backup-ExistingLicense $script:rarreg | Out-Null
+      Write-Info "Creating backup of existing license file..."
+      $backupResult = Backup-ExistingLicense $script:rarreg
+      if (-not $backupResult) {
+        Write-Warn "Failed to create backup. Consider using -NoBackup if this is intentional."
+      }
+    } elseif ((Test-Path $script:rarreg -PathType Leaf) -and $script:OVERWRITE_LICENSE -and (-not $script:BACKUP_LICENSE)) {
+      Write-Warn "Overwriting existing license without backup (NoBackup parameter used)"
     }
+
+    Pause-IfDebug "About to write license file."
 
     Write-Info "Writing license to: $($script:rarreg)"
     if (-not (Ensure-LicenseWrite $script:rarreg $rarkey)) {
@@ -424,6 +542,7 @@ function Invoke-OcwrLicensing {
       -Query "Do you want to overwrite the current license?" `
       -ResultPositive {
         $script:OVERWRITE_LICENSE = $true
+        Pause-IfDebug "User consented to overwrite license. Proceeding..."
         Invoke-OcwrLicensing
       } `
       -ResultNegative { &$Error_LicenseExists }
@@ -432,6 +551,25 @@ function Invoke-OcwrLicensing {
 #endregion
 
 #region Begin Execution
+# Check for upfront elevation when running via IEX/CDN
+if (-not $ElevatedRerun -and -not (Test-IsAdministrator) -and -not $NoElevation) {
+  Write-Info "Checking if elevation will be required..."
+  
+  # Pre-check if we'll likely need elevation for any WinRAR installation
+  $willNeedElevation = $false
+  if ((Test-Path $winrar64 -PathType Leaf)) {
+    $willNeedElevation = (Requires-ElevationForPath $rarreg64)
+  }
+  if ((Test-Path $winrar32 -PathType Leaf)) {
+    $willNeedElevation = $willNeedElevation -or (Requires-ElevationForPath $rarreg32)
+  }
+  
+  if ($willNeedElevation) {
+    Write-Info "This operation requires administrator privileges to write WinRAR license files."
+    Request-UpfrontElevation -Reason "Administrator privileges required for WinRAR license installation."
+  }
+}
+
 Get-InstalledWinrarLocations
 
 if (-not $script:WINRAR_IS_INSTALLED) {
@@ -439,8 +577,24 @@ if (-not $script:WINRAR_IS_INSTALLED) {
   Stop-OcwrOperation -ExitType Error -Message "WinRAR is not installed."
 }
 
+# Warn about NoElevation if it might prevent script from working
+if ($NoElevation -and -not (Test-IsAdministrator)) {
+  $willNeedElevation = $false
+  if ((Test-Path $winrar64 -PathType Leaf)) {
+    $willNeedElevation = (Requires-ElevationForPath $rarreg64)
+  }
+  if ((Test-Path $winrar32 -PathType Leaf)) {
+    $willNeedElevation = $willNeedElevation -or (Requires-ElevationForPath $rarreg32)
+  }
+  
+  if ($willNeedElevation) {
+    Write-Warn "NoElevation parameter used, but administrator privileges may be required."
+    Write-Warn "License installation may fail if WinRAR directory is write-protected."
+  }
+}
+
 Invoke-OcwrLicensing
 
 New-Toast -Url "https://github.com/DopeDealers" -ToastTitle "WinRAR License installed successfully" -ToastText2 "Thanks for using InstaRAR"
-Stop-OcwrOperation -ExitType Complete
+Stop-OcwrOperation -ExitType Complete -Message "WinRAR license installation completed successfully."
 #endregion
