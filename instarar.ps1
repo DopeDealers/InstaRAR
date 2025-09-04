@@ -74,11 +74,22 @@ function Invoke-RemoteScript {
         Write-Host "   Downloading from: $Url" -ForegroundColor DarkGray
         Write-Host
         
-        # Use the standard irm | iex pattern for remote script execution
-        Invoke-RestMethod -Uri $Url | Invoke-Expression
+        # Execute in completely separate PowerShell process to avoid any scope conflicts
+        $arguments = @(
+            "-NoProfile",
+            "-ExecutionPolicy", "Bypass",
+            "-Command", "irm '$Url' | iex; Read-Host 'Press Enter to continue'"
+        )
         
-        Write-Host
-        Write-Host "[SUCCESS] Operation completed successfully!" -ForegroundColor Green
+        $process = Start-Process -FilePath "powershell.exe" -ArgumentList $arguments -Wait -PassThru
+        
+        if ($process.ExitCode -eq 0) {
+            Write-Host
+            Write-Host "[SUCCESS] Operation completed successfully!" -ForegroundColor Green
+        } else {
+            Write-Host
+            Write-Host "[ERROR] Script execution failed with exit code: $($process.ExitCode)" -ForegroundColor Red
+        }
         
     } catch {
         Write-Host

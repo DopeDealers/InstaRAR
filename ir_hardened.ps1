@@ -52,6 +52,9 @@ $script:CERT_CACHE_DURATION = 3600  # 1 hour in seconds
 # Security event source for Windows Event Log
 $script:EVENT_SOURCE = "InstaRAR-Enhanced"
 $script:LOG_NAME = "Application"
+
+# Known hashes for WinRAR versions (empty by default - smart hash verification will cross-validate)
+$script:KNOWN_HASHES = @{}
 #endregion
 
 #region Variables
@@ -1211,7 +1214,8 @@ function Get-WinrarInstaller {
       
       # Get expected hash for this version and architecture
       $expectedHash = $null
-      if ($script:KNOWN_HASHES.ContainsKey($script:RARVER.ToString()) -and 
+      if ($null -ne $script:KNOWN_HASHES -and 
+          $script:KNOWN_HASHES.ContainsKey($script:RARVER.ToString()) -and 
           $script:KNOWN_HASHES[$script:RARVER.ToString()].ContainsKey($script:ARCH)) {
         $expectedHash = $script:KNOWN_HASHES[$script:RARVER.ToString()][$script:ARCH]
       }
