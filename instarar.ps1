@@ -99,8 +99,7 @@ function Invoke-RemoteScript {
         Write-Host "Please check your internet connection and try again." -ForegroundColor Yellow
     }
     finally {
-        # Optional: Add cleanup or finalization code here if needed.
-        # For now, this block is empty to satisfy the Try-Catch-Finally structure.
+        # Auto Generated to fix case syntax
     }
 }
 
